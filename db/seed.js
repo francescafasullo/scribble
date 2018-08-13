@@ -1,24 +1,24 @@
 'use strict'
 
 const db = require('APP/db')
-    , {User, Thing, Favorite, Promise} = db
+    , {User, Notebook, Note, Promise} = db
     , {mapValues} = require('lodash')
 
 function seedEverything() {
   const seeded = {
-    users: users(),
-    things: things(),
+    users: users()
   }
 
-  seeded.favorites = favorites(seeded)
+  seeded.notebooks = notebooks(seeded)
+  seeded.notes = notes(seeded)
 
   return Promise.props(seeded)
 }
 
 const users = seed(User, {
-  god: {
-    email: 'god@example.com',
-    name: 'So many names',
+  francesca: {
+    email: 'francescafasullo@example.com',
+    name: 'Francesca Fasullo',
     password: '1234',
   },
   barack: {
@@ -28,44 +28,21 @@ const users = seed(User, {
   },
 })
 
-const things = seed(Thing, {
-  surfing: {name: 'surfing'},
-  smiting: {name: 'smiting'},
-  puppies: {name: 'puppies'},
-})
+const notebooks = seed(Notebook, ({users}) => ({
+  gardening: {name: 'Gardening', user_id: users.francesca.id},
+  coding: {name: 'Coding', user_id: users.francesca.id},
+  travel: {name: 'Travel', user_id: users.francesca.id}
+}))
 
-const favorites = seed(Favorite,
-  // We're specifying a function here, rather than just a rows object.
-  // Using a function lets us receive the previously-seeded rows (the seed
-  // function does this wiring for us).
-  //
-  // This lets us reference previously-created rows in order to create the join
-  // rows. We can reference them by the names we used above (which is why we used
-  // Objects above, rather than just arrays).
-  ({users, things}) => ({
-    // The easiest way to seed associations seems to be to just create rows
-    // in the join table.
-    'obama loves surfing': {
-      user_id: users.barack.id,    // users.barack is an instance of the User model
-                                   // that we created in the user seed above.
-                                   // The seed function wires the promises so that it'll
-                                   // have been created already.
-      thing_id: things.surfing.id  // Same thing for things.
-    },
-    'god is into smiting': {
-      user_id: users.god.id,
-      thing_id: things.smiting.id
-    },
-    'obama loves puppies': {
-      user_id: users.barack.id,
-      thing_id: things.puppies.id
-    },
-    'god loves puppies': {
-      user_id: users.god.id,
-      thing_id: things.puppies.id
-    },
-  })
-)
+const notes = seed(Note, ({notebooks}) => ({
+  gardening1: {name: 'Perennials', text: 'Water your perennials well after you plant them. Then lay a 2- to 3-inch-deep layer of mulch over the soil around your new plants. The mulch will help the soil hold moisture and prevent weeds from growing.', notebook_id: notebooks.gardening.id},
+  gardening2: {name: 'Being An Urban Gardener: Creating A City Vegetable Garden', text: 'Growing vegetables in containers is one of the easiest ways to create a city vegetable garden. With containers, you can grow anything from lettuce and tomatoes to beans and peppers. You can even grow potatoes and vine crops, such as cucumbers. As long as there is adequate drainage, nearly anything can be used to grow vegetables.', notebook_id: notebooks.gardening.id},
+  gardening3: {name: 'Mini Succulent Garden Ideas', text: 'You can really use just about any glue to adhere your succulents and moss to the planter you are using. However, after trying a variety of glues, I found that Oasis Floral Adhesive is far and away the easiest option to work with and keeps the succulents most secure.', notebook_id: notebooks.gardening.id},
+  coding1: {name: 'How To Start Learning Javascript', text: 'If you are hoping to learn to code in 2017, become a front-end/full-stack/web/software developer, join a coding bootcamp, start building your own websites, or just want to learn more about JavaScript, hopefully the list of resources below helps you achieve your goals!', notebook_id: notebooks.coding.id},
+  coding2: {name: 'App Ideas', text: '#1 Scan and Shop apps that let you scan any items to find it online by the image so you can search and buy them from the online shopping sites easily. You can add more features to make the app more interesting and useful. #2 Intelligent cooking app that will ask for ingredient names from the user and will recommend/suggest a dish that can be prepared with those items. It’d be very useful when you are looking to make a nice dish with the available ingredients.', notebook_id: notebooks.coding.id},
+  travel1: {name: 'Top Travel Destinations for 2019', text: 'Paris, Yellowstone, Rome, Tahiti, London', notebook_id: notebooks.travel.id},
+  travel2: {name: 'How To Stay On Budget While Traveling', text: 'The first step to staying within your budget when traveling is to establish one, says Andrew Schrage, editor-in-chief of personal finance website MoneyCrashers. It should be detailed and complete, from airfare to souvenirs to entertainment. In that same vein, you should also decide on what’s most important to you. It might be securing memorable items to remember your trip or great meals at local restaurants. Be sure to plan out available funds according to those needs.', notebook_id: notebooks.travel.id}
+}))
 
 if (module === require.main) {
   db.didSync
@@ -135,4 +112,4 @@ function seed(Model, rows) {
   }
 }
 
-module.exports = Object.assign(seed, {users, things, favorites})
+module.exports = Object.assign(seed, {users, notebooks, notes})
